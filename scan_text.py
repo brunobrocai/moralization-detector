@@ -98,7 +98,7 @@ def bert_classification(
 
 
 def scan_text_dimi_modelled(
-    text, dimi, classifier, tokenizer,
+    text, dimi, classifier, tokenizer, device,
     **kwargs
 ):
 
