@@ -76,10 +76,9 @@ def bert_classification(
     **kwargs
 ):
 
-    if isinstance(possible_moralization, classes.PossibleMoralization):
-        possible_moralization_str = possible_moralization.full_text
-    else:
-        possible_moralization_str = possible_moralization
+    possible_moralization_str = possible_moralization.full_text
+
+    print(possible_moralization_str)
 
     tokens = tokenizer.encode(possible_moralization_str, kwargs)
     attention_mask = [int(token > 0) for token in tokens]
