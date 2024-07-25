@@ -76,11 +76,12 @@ def bert_classification(
     **kwargs
 ):
 
-    possible_moralization_str = possible_moralization.full_text
+    if isinstance(possible_moralization, classes.PossibleMoralization):
+        possible_moralization_str = possible_moralization.full_text
+    else:
+        possible_moralization_str = possible_moralization
 
-    print(possible_moralization_str)
-
-    tokens = tokenizer.encode(possible_moralization_str, kwargs)
+    tokens = tokenizer.encode(possible_moralization_str, **kwargs)
     attention_mask = [int(token > 0) for token in tokens]
 
     tokens = torch.tensor(tokens).unsqueeze(0) # Batch size 1
