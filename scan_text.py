@@ -26,8 +26,7 @@ def check_sentences(spacy_doc, dimi, context_window=2):
             ]
             metadata = classes.MetaData('', '', '', '', '')
             poss_moral = classes.PossibleMoralizationDimi(
-                precontext_len=context_window,
-                postcontext_len=context_window,
+                context_window=context_window,
                 metadata=metadata,
                 dimi_words=dimi_words
             )

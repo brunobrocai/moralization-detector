@@ -46,9 +46,9 @@ class PossibleMoralization:
 
     @precontext.setter
     def precontext(self, value):
-        if len(value) > self.__precontext_len:
+        if len(value) > self.__context_window:
             print('Precontext too long, truncating')
-            self.__precontext = value[-self.__precontext_len:]
+            self.__precontext = value[-self.__context_window:]
         self.__precontext = value
         self.update_full_text()
 
@@ -58,9 +58,9 @@ class PossibleMoralization:
 
     @postcontext.setter
     def postcontext(self, value):
-        if len(value) > self.__postcontext_len:
+        if len(value) > self.__context_window:
             print('Postcontext too long, truncating')
-            self.__postcontext = value[:self.__postcontext_len]
+            self.__postcontext = value[:self.__context_window]
         self.__postcontext = value
         self.update_full_text()
 
@@ -72,16 +72,23 @@ class PossibleMoralization:
     def metadata(self, value):
         self.__metadata = value
 
+    @property
+    def context_window(self):
+        return self.__context_window
+
+    @context_window.setter
+    def context_window(self, value):
+        self.__context_window = value
+
     def __init__(
-        self, precontext_len=2, postcontext_len=2,
+        self, context_window=2,
         metadata=MetaData('', '', '', '', '')
     ):
         self.__full_text = ''
         self.__focus_sentence = ''
         self.__precontext = ''
         self.__postcontext = ''
-        self.__precontext_len = precontext_len
-        self.__postcontext_len = postcontext_len
+        self.__context_window = context_window
         self.__metadata = metadata
 
 
@@ -109,10 +116,10 @@ class PossibleMoralizationDimi(PossibleMoralization):
         ]
 
     def __init__(
-        self, precontext_len=2, postcontext_len=2,
+        self, context_window=2,
         metadata=MetaData('', '', '', '', ''), dimi_words=None
     ):
-        super().__init__(precontext_len, postcontext_len, metadata)
+        super().__init__(context_window, metadata)
         self.__dimi_words = dimi_words
 
 
@@ -144,17 +151,22 @@ class PossibleMoralizationModelled(PossibleMoralizationDimi):
             self.__logits, dim=0
         )
 
+    def __repr__(self):
+        return f'PossibleMoralization Object around: {self.__focus_sentence}'
+
     def __init__(
         self,
         super_instance,
         logits=None
     ):
         super().__init__(
-            super_instance.__precontext_len,
-            super_instance.__postcontext_len,
-            super_instance.__metadata,
-            super_instance.__dimi_words
+            super_instance.context_window,
+            super_instance.metadata,
+            super_instance.dimi_words
         )
+        self.__precontext = super_instance.precontext
+        self.__postcontext = super_instance.postcontext
+        self.__focus_sentence = super_instance.focus_sentence
         self.__logits = logits
-        self.__label = label
         self.__probabilities = None
+        self.__label = 2
