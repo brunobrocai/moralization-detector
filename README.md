@@ -1,1 +1,3 @@
-# moralization-detector
+# Moralization Detection Pipeline
+
+This repository contains objects and functions that help finding moralization in a text. Not meant to be used as standalone. Instead, use one of these Colab notebooks: ... ...
