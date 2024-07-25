@@ -103,14 +103,15 @@ def scan_text_dimi_modelled(
 ):
 
     possible_moralizations = scan_text_dimi(
-        text, dimi, kwargs
+        text, dimi
     )
 
     moralizations_modelled = []
 
     for poss_moral in possible_moralizations:
         logits = bert_classification(
-            poss_moral, tokenizer, classifier, kwargs
+            poss_moral, tokenizer, classifier, device,
+            **kwargs
         )
 
         modelled_moral = classes.PossibleMoralizationModelled(
