@@ -1,25 +1,31 @@
 from dataclasses import dataclass
 import spacy
 import torch
-import numpy
 
 
 @dataclass
 class MetaData:
+    """Dataclass for metadata of a text."""
     title: str
     author: str
     date: str
     source: str
     other: str
 
+    def to_dict(self):
+        return {
+            'title': self.title,
+            'author': self.author,
+            'date': self.date,
+            'source': self.source,
+            'other': self.other
+        }
+
 
 class PossibleMoralization:
+    """Class for representing possible moralization in a text."""
 
-    def __str__(self):
-        return self.__full_text
-
-    def __repr__(self):
-        return f'PossibleMoralization Object around: {self.__focus_sentence}'
+    # +++ Getters & Setters +++
 
     @property
     def full_text(self):
@@ -28,13 +34,6 @@ class PossibleMoralization:
     @property
     def focus_sentence(self):
         return self.__focus_sentence
-
-    def update_full_text(self):
-        self.__full_text = ' '.join((
-            ' '.join(self.__precontext),
-            self.__focus_sentence,
-            ' '.join(self.__postcontext)
-        ))
 
     @focus_sentence.setter
     def focus_sentence(self, value):
@@ -81,6 +80,14 @@ class PossibleMoralization:
     def context_window(self, value):
         self.__context_window = value
 
+    # +++ Magic Methods +++
+
+    def __str__(self):
+        return self.__full_text
+
+    def __repr__(self):
+        return f'PossibleMoralization Object around: {self.__focus_sentence}'
+
     def __init__(
         self, context_window=2,
         metadata=MetaData('', '', '', '', '')
@@ -92,8 +99,29 @@ class PossibleMoralization:
         self.__context_window = context_window
         self.__metadata = metadata
 
+    # +++ Methods +++
+
+    def update_full_text(self):
+        self.__full_text = ' '.join((
+            ' '.join(self.__precontext),
+            self.__focus_sentence,
+            ' '.join(self.__postcontext)
+        ))
+
+    def to_dict(self):
+        return {
+            'focus_sentence': self.__focus_sentence,
+            'precontext': self.__precontext,
+            'postcontext': self.__postcontext,
+            'metadata': self.metadata.to_dict(),
+            'full_text': self.__full_text
+        }
+
 
 class PossibleMoralizationDimi(PossibleMoralization):
+    """Class for representing possible moralization, incl. DIMI words."""
+
+    # +++ Getters & Setters +++
 
     @property
     def dimi_words(self):
@@ -104,6 +132,23 @@ class PossibleMoralizationDimi(PossibleMoralization):
         if value is None:
             value = []
         self.__dimi_words = value
+
+    # +++ Magic Methods +++
+
+    def __init__(
+        self, context_window=2,
+        metadata=MetaData('', '', '', '', ''), dimi_words=None
+    ):
+        super().__init__(context_window, metadata)
+        self.__dimi_words = dimi_words
+
+    # +++ Methods +++
+
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            'dimi_words': self.__dimi_words
+        }
 
     def find_dimi_words(self, dimi, spacy_model='de_core_news_lg'):
         nlp = spacy.load(spacy_model)
@@ -116,15 +161,11 @@ class PossibleMoralizationDimi(PossibleMoralization):
             for token in doc if token.lemma_ in dimi
         ]
 
-    def __init__(
-        self, context_window=2,
-        metadata=MetaData('', '', '', '', ''), dimi_words=None
-    ):
-        super().__init__(context_window, metadata)
-        self.__dimi_words = dimi_words
-
 
 class PossibleMoralizationModelled(PossibleMoralizationDimi):
+    """Class for representing possible moralization, incl. model output."""
+
+    # +++ Getters & Setters +++
 
     @property
     def logits(self):
@@ -134,7 +175,7 @@ class PossibleMoralizationModelled(PossibleMoralizationDimi):
     def logits(self, value):
         self.__logits = value
         self.probabilities_from_logits()
-        self.label_from_logits()
+        self.label_from_probabilities()
 
     @property
     def label(self):
@@ -144,11 +185,7 @@ class PossibleMoralizationModelled(PossibleMoralizationDimi):
     def probabilities(self):
         return self.__probabilities
 
-    def label_from_logits(self):
-        self.__label = int(self.__probabilities.argmax().item())
-
-    def probabilities_from_logits(self):
-        self.__probabilities = torch.sigmoid(self.__logits).cpu().numpy().flatten()
+    # +++ Magic Methods +++
 
     def __repr__(self):
         return f'PossibleMoralization Object around: {self.__focus_sentence}'
@@ -173,4 +210,22 @@ class PossibleMoralizationModelled(PossibleMoralizationDimi):
         self.__precontext = super_instance.precontext
         self.__postcontext = super_instance.postcontext
         self.__focus_sentence = super_instance.focus_sentence
+        self.__label = None
+        self.__probabilities = None
         self.logits = logits
+
+    # +++ Methods +++
+
+    def label_from_probabilities(self):
+        self.__label = int(self.__probabilities.argmax().item())
+
+    def probabilities_from_logits(self):
+        prob_tensor = torch.sigmoid(self.__logits)
+        self.__probabilities = prob_tensor.cpu().numpy().flatten()
+
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            'label': self.__label,
+            'probabilities': self.__probabilities.tolist()
+        }
