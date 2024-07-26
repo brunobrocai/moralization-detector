@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import spacy
 import torch
+import numpy
 
 
 @dataclass
@@ -132,8 +133,8 @@ class PossibleMoralizationModelled(PossibleMoralizationDimi):
     @logits.setter
     def logits(self, value):
         self.__logits = value
-        self.label_from_logits()
         self.probabilities_from_logits()
+        self.label_from_logits()
 
     @property
     def label(self):
@@ -144,15 +145,20 @@ class PossibleMoralizationModelled(PossibleMoralizationDimi):
         return self.__probabilities
 
     def label_from_logits(self):
-        self.__label = self.__logits.argmax().item()
+        self.__label = int(self.__probabilities.argmax().item())
 
     def probabilities_from_logits(self):
-        self.__probabilities = torch.nn.functional.softmax(
-            self.__logits, dim=0
-        )
+        self.__probabilities = torch.sigmoid(self.__logits).cpu().numpy().flatten()
 
     def __repr__(self):
         return f'PossibleMoralization Object around: {self.__focus_sentence}'
+
+    def __str__(self):
+        return (
+            f'"{self.__focus_sentence}" ...with '
+            f'moralizing content {['not ', ''][self.__label]} '
+            f'detected by the classification model.'
+        )
 
     def __init__(
         self,
@@ -167,6 +173,4 @@ class PossibleMoralizationModelled(PossibleMoralizationDimi):
         self.__precontext = super_instance.precontext
         self.__postcontext = super_instance.postcontext
         self.__focus_sentence = super_instance.focus_sentence
-        self.__logits = logits
-        self.__probabilities = None
-        self.__label = 2
+        self.logits = logits
