@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import json
 import spacy
+import torch
 
 
 @dataclass
