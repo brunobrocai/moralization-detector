@@ -1,6 +1,6 @@
 from dataclasses import dataclass
+import json
 import spacy
-import torch
 
 
 @dataclass
@@ -20,6 +20,15 @@ class MetaData:
             'source': self.source,
             'other': self.other
         }
+
+    def from_json(self, json_file):
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        self.title = data.get('title', None)
+        self.author = data.get('author', None)
+        self.date = data.get('date', None)
+        self.source = data.get('source', None)
+        self.other = data.get('other', None)
 
 
 class PossibleMoralization:
@@ -207,9 +216,9 @@ class PossibleMoralizationModelled(PossibleMoralizationDimi):
             super_instance.metadata,
             super_instance.dimi_words
         )
-        self.__precontext = super_instance.precontext
-        self.__postcontext = super_instance.postcontext
-        self.__focus_sentence = super_instance.focus_sentence
+        self.precontext = super_instance.precontext
+        self.postcontext = super_instance.postcontext
+        self.focus_sentence = super_instance.focus_sentence
         self.__label = None
         self.__probabilities = None
         self.logits = logits
