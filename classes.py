@@ -156,7 +156,7 @@ class PossibleMoralizationModelled(PossibleMoralizationDimi):
     def __str__(self):
         return (
             f'"{self.__focus_sentence}" ...with '
-            f'moralizing content {['not ', ''][self.__label]} '
+            f'moralizing content {"not " if self.__label == 0 else ""} '
             f'detected by the classification model.'
         )
 
