@@ -1,6 +1,6 @@
 import spacy
-import classes
 import torch
+from . import classes
 
 
 def check_sentences(spacy_doc, dimi, context_window=2):
